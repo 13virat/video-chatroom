@@ -1,12 +1,15 @@
+import json
 import random
 import time
-import json
 
 from agora_token_builder import RtcTokenBuilder
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+
 from .models import RoomMember
+
+
 def getToken(request):
     appId = "c3dfe7dfb0b34716a26cdb0eaaa02475"
     appCertificate = "dd3bce08f672448db9173c80088b6339"
@@ -33,10 +36,34 @@ def room(request):
 
 @csrf_exempt
 def createMember(request):
-    data=json.loads(request.body)
-    member,created=RoomMember.objects.get_or_created(
+    data = json.loads(request.body)
+    member, created = RoomMember.objects.get_or_create(
         name=data['name'],
         uid=data['UID'],
         room_name=data['room_name'],
     )
-    return JsonResponse({'name':data['name']},safe=False)
+    return JsonResponse({'name': data['name']}, safe=False)
+
+
+def getMember(request):
+    uid=request.GET.get('UID')
+    room_name=request.GET.get('room_name')
+    member=RoomMember.objects.get(
+        uid=uid,
+        room_name=room_name                              
+    )
+    name=member.name
+    return JsonResponse({'name':member.name},safe=False)
+        
+
+   
+@csrf_exempt
+def deleteMember(request):
+    data = json.loads(request.body)
+    member=RoomMember.objects.get(
+        name=data['name'],
+        uid=data['UID'],
+        room_name=data['room_name']                              
+    )
+    member.delete()
+    return JsonResponse('Member was deleted', safe=False)
